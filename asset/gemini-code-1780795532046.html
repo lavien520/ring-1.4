@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>AI生成旋转圆环特效</title>
+    <style>
+        body { margin: 0; background-color: #e0e4e8; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        canvas { background: radial-gradient(circle, #ffffff 0%, #cbd5e1 100%); box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+    <canvas id="rotateCanvas" width="720" height="1280"></canvas>
+
+    <script>
+        const canvas = document.getElementById('rotateCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        
+        let angle = 0;
+        let speed = 0.01; // 对应视频开头的慢速旋转
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 模拟视频中的多层圆环（由内向外扩散）
+            const layers = [
+                { radius: 200, lineWidth: 6, alpha: 0.9, blur: 15 },
+                { radius: 220, lineWidth: 4, alpha: 0.6, blur: 25 },
+                { radius: 240, lineWidth: 2, alpha: 0.3, blur: 35 }
+            ];
+
+            // 模拟视频后半段的加速旋转效果
+            if (speed < 0.15) speed += 0.0002; 
+            angle += speed;
+
+            layers.forEach((layer, index) => {
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                // 给不同层施加微弱的旋转差，形成视频中的“幻影/音波”层叠感
+                ctx.rotate(angle * (1 + index * 0.1)); 
+                
+                // 设置发光特效 (Neon Glow)
+                ctx.shadowBlur = layer.blur;
+                ctx.shadowColor = "rgba(0, 191, 255, 0.8)";
+                ctx.strokeStyle = `rgba(135, 206, 250, ${layer.alpha})`;
+                ctx.lineWidth = layer.lineWidth;
+                
+                // 绘制带缺口/渐变的圆环（以便看出在旋转）
+                ctx.beginPath();
+                ctx.arc(0, 0, layer.radius, 0, Math.PI * 1.8); // 留出0.2pi的缺口
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+</body>
+</html>
