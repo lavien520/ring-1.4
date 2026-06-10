@@ -81,9 +81,11 @@ final class RingView: NSView, StateMonitorDelegate {
             let center = CGPoint(x: bounds.midX, y: bounds.midY)
             let label = "Allow All"
             let fontSize = ringSize * Constants.permissionLabelFontFactor
+            let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .medium)
+            let color = Constants.permissionMainColor
             let attrs: [NSAttributedString.Key: Any] = [
-                .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
-                .foregroundColor: Constants.permissionMainColor,
+                .font: font,
+                .foregroundColor: color,
             ]
             let textSize = (label as NSString).size(withAttributes: attrs)
             let textRect = NSRect(
@@ -92,6 +94,16 @@ final class RingView: NSView, StateMonitorDelegate {
                 width: textSize.width,
                 height: textSize.height
             )
+
+            // Glow pass
+            context.saveGState()
+            let rgb = color.usingColorSpace(.genericRGB) ?? color
+            let glowColor = CGColor(red: rgb.redComponent, green: rgb.greenComponent, blue: rgb.blueComponent, alpha: 0.6)
+            context.setShadow(offset: .zero, blur: fontSize * 0.8, color: glowColor)
+            (label as NSString).draw(in: textRect, withAttributes: attrs)
+            context.restoreGState()
+
+            // Crisp text pass
             (label as NSString).draw(in: textRect, withAttributes: attrs)
         }
     }

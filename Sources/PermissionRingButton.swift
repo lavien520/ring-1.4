@@ -36,11 +36,12 @@ final class PermissionRingButton: NSView {
         // Draw ring using same renderer as main ring
         RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: 0, colorOverride: ringColor)
 
-        // Draw label text centered on the ring
+        // Draw label text with sci-fi glow effect
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
         let fontSize = ringSize * Constants.permissionLabelFontFactor
+        let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .medium)
         let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
+            .font: font,
             .foregroundColor: ringColor,
         ]
         let textSize = (label as NSString).size(withAttributes: attrs)
@@ -50,6 +51,16 @@ final class PermissionRingButton: NSView {
             width: textSize.width,
             height: textSize.height
         )
+
+        // Glow pass: draw text with shadow for light-glow effect
+        context.saveGState()
+        let rgb = ringColor.usingColorSpace(.genericRGB) ?? ringColor
+        let glowColor = CGColor(red: rgb.redComponent, green: rgb.greenComponent, blue: rgb.blueComponent, alpha: 0.6)
+        context.setShadow(offset: .zero, blur: fontSize * 0.8, color: glowColor)
+        (label as NSString).draw(in: textRect, withAttributes: attrs)
+        context.restoreGState()
+
+        // Crisp text pass on top
         (label as NSString).draw(in: textRect, withAttributes: attrs)
     }
 

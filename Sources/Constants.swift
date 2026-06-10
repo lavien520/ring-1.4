@@ -47,7 +47,7 @@ enum Constants {
     static let permissionGap: CGFloat = 2
     static let permissionOuterRadiusFactor: CGFloat = 0.30
     static let permissionPadding: CGFloat = 60
-    static let permissionLabelFontFactor: CGFloat = 0.12
+    static let permissionLabelFontFactor: CGFloat = 0.08
     static let permissionHitRadiusOffset: CGFloat = 35
     static let permissionHitRadiusExtra: CGFloat = 20
 
