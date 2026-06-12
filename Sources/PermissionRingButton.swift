@@ -6,7 +6,7 @@ final class PermissionRingButton: NSView {
     private let ringSize: CGFloat
     private let ringColor: NSColor
     private let label: String
-    private let behavior: String
+    let behavior: String
 
     init(center: CGPoint, radius: CGFloat, color: NSColor, label: String, behavior: String) {
         self.ringSize = radius

@@ -147,6 +147,27 @@ final class PermissionManager {
         return nil
     }
 
+    /// Returns the behavior string ("allow"/"deny") if point hits a button, nil otherwise.
+    func hitTestBehavior(_ point: NSPoint, in parentView: NSView) -> String? {
+        guard isShowing, let delegate = delegate else { return nil }
+        let ringSize = delegate.ringSize
+
+        for ring in permissionRings {
+            let localPoint = ring.convert(point, from: parentView)
+            let center = CGPoint(x: ring.bounds.midX, y: ring.bounds.midY)
+            let dx = localPoint.x - center.x
+            let dy = localPoint.y - center.y
+            let distance = sqrt(dx * dx + dy * dy)
+            let outerRadius = ringSize * Constants.outerRadiusFactor
+                + Constants.permissionHitRadiusOffset
+                + Constants.permissionHitRadiusExtra
+            if distance <= outerRadius {
+                return ring.behavior
+            }
+        }
+        return nil
+    }
+
     // MARK: - Window Expansion
 
     private func expandWindow(window: NSWindow?, horizontal: Bool, vertical: Bool, ringSize: CGFloat) {
