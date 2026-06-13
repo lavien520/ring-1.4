@@ -2,6 +2,9 @@
 
 Claude Code 智能体状态的可视化指示器 — 一个悬浮在桌面上的发光环形动画。
 
+[![最新版本](https://img.shields.io/github/v/release/lavien520/ring-1.4?label=最新版本)](https://github.com/lavien520/ring-1.4/releases/latest)
+[![下载安装程序](https://img.shields.io/github/downloads/lavien520/ring-1.4/total?label=下载次数)](https://github.com/lavien520/ring-1.4/releases/latest)
+
 ## ✨ 功能特性
 
 - **实时状态监控** — 显示 Claude Code 智能体状态（空闲、思考中、工作中、需关注、错误、休眠、通知）
