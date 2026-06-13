@@ -44,8 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let settingsPath = NSHomeDirectory() + "/.claude/settings.json"
 
         guard FileManager.default.fileExists(atPath: settingsPath) else {
-            print("[AppDelegate] ⚠️ Claude Code settings not found at \(settingsPath)")
-            print("[AppDelegate]    Run 'make install' or './hooks/install-hooks.sh' to configure hooks")
+            showHookWarning(reason: "未找到 Claude Code 配置文件")
             return
         }
 
@@ -53,8 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let hooks = json["hooks"] as? [String: Any],
               !hooks.isEmpty else {
-            print("[AppDelegate] ⚠️ Claude Code hooks not configured")
-            print("[AppDelegate]    Run 'make install' or './hooks/install-hooks.sh' to configure hooks")
+            showHookWarning(reason: "Claude Code Hook 未配置")
             return
         }
 
@@ -65,8 +63,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if hooksString.contains("ring-hook") {
             print("[AppDelegate] ✅ Claude Code hooks configured")
         } else {
-            print("[AppDelegate] ⚠️ Ring hooks not found in Claude Code settings")
-            print("[AppDelegate]    Run 'make install' or './hooks/install-hooks.sh' to configure hooks")
+            showHookWarning(reason: "Ring Hook 未配置")
+        }
+    }
+
+    private func showHookWarning(reason: String) {
+        print("[AppDelegate] ⚠️ \(reason)")
+        print("[AppDelegate]    运行 'make install' 或 './hooks/install-hooks.sh' 配置 Hook")
+
+        // Show alert dialog with actionable instructions
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = "RingGlow Hook 未配置"
+            alert.informativeText = "\(reason)\n\n请在终端运行以下命令后重启 Claude Code：\n\nmake install"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "复制命令")
+            alert.addButton(withTitle: "忽略")
+
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn {
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.setString("make install", forType: .string)
+            }
         }
     }
 }

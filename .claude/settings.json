@@ -30,7 +30,13 @@
       "Bash(open /tmp/particle-ring-demo.html)",
       "Bash(bash build.sh)",
       "Bash(open /tmp/Ring.app)",
-      "Bash(curl -s -X POST http://127.0.0.1:23334/permission -H 'Content-Type: application/json' -d '{\"tool_name\":\"Bash\",\"session_id\":\"sphere-test\",\"agent_id\":\"claude-code\"}' --max-time 30)"
+      "Bash(curl -s -X POST http://127.0.0.1:23334/permission -H 'Content-Type: application/json' -d '{\"tool_name\":\"Bash\",\"session_id\":\"sphere-test\",\"agent_id\":\"claude-code\"}' --max-time 30)",
+      "Bash(make clean *)",
+      "Bash(git add *)",
+      "Bash(curl -s -X POST http://localhost:23334/permission -H 'Content-Type: application/json' -d '{\"tool_name\":\"test\",\"session_id\":\"test\",\"agent_id\":\"test\"}' --max-time 3)",
+      "Bash(curl -s http://localhost:23334/state)",
+      "Bash(git commit -m 'feat: show alert when hooks not configured, auto-install on build *)",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "/private/var/folders/fr/6yy0gt394mlb55rqc3ydzlqh0000gn/T",
