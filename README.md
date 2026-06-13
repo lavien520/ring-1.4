@@ -30,9 +30,10 @@ Claude Code 智能体状态的可视化指示器 — 一个悬浮在桌面上的
 ```bash
 git clone https://github.com/lavien520/ring-1.4.git
 cd ring-1.4
-make build
-make run
+make install    # 构建 + 自动安装 Hook + 启动应用
 ```
+
+> `make install` 会自动配置 Claude Code Hook，无需手动操作。首次安装推荐使用此命令。
 
 ## 🎮 使用方法
 
@@ -65,7 +66,8 @@ cd hooks
 ## 🛠️ 构建命令
 
 ```bash
-make build       # 构建应用
+make install     # 构建 + 自动安装 Hook + 启动（推荐首次安装）
+make build       # 仅构建应用（已配置 Hook 时自动跳过安装）
 make run         # 构建并运行
 make dmg         # 生成 DMG 安装程序
 make dmg-simple  # 生成简单 DMG（无自定义界面）

@@ -1,4 +1,4 @@
-.PHONY: build clean run dmg dmg-simple
+.PHONY: build install clean run dmg dmg-simple
 
 APP_NAME = RingGlow
 BUILD_DIR = build
@@ -6,6 +6,13 @@ APP_BUNDLE = $(BUILD_DIR)/$(APP_NAME).app
 
 build:
 	@./build.sh
+
+# Build + install hooks + launch (recommended for first install and daily use)
+install: build
+	@open $(APP_BUNDLE)
+	@echo ""
+	@echo "==> RingGlow 已启动！"
+	@echo "    请重启 Claude Code 以使 Hook 生效"
 
 clean:
 	@rm -rf $(BUILD_DIR)
