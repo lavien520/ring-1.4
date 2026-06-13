@@ -1,4 +1,4 @@
-.PHONY: build clean run dmg
+.PHONY: build clean run dmg dmg-simple
 
 APP_NAME = RingGlow
 BUILD_DIR = build
@@ -13,8 +13,13 @@ clean:
 run: build
 	@open $(APP_BUNDLE)
 
+# Professional DMG with drag-to-install interface, background, and icon layout
 dmg: build
-	@echo "==> Creating DMG installer..."
+	@./scripts/create-dmg.sh
+
+# Simple DMG without customization (fallback)
+dmg-simple: build
+	@echo "==> Creating simple DMG..."
 	@hdiutil create -volname "$(APP_NAME)" \
 		-srcfolder $(APP_BUNDLE) \
 		-ov -format UDZO \

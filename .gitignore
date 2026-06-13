@@ -2,3 +2,4 @@
 .playwright-mcp/
 build/
 *.dmg
+__pycache__/
