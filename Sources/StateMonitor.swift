@@ -94,16 +94,34 @@ final class StateMonitor {
 
     private func receiveRequest(connection: NWConnection) {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
-            guard let self = self, let data = data, !data.isEmpty else {
+            guard let self = self else { return }
+
+            if let data = data, !data.isEmpty {
+                let holdsConnection = self.processRequest(data: data, connection: connection)
+
+                if holdsConnection {
+                    // Keep receiving to maintain connection until user decides
+                    self.receiveLoop(connection: connection)
+                } else if isComplete || error != nil {
+                    connection.cancel()
+                }
+            } else if error != nil {
+                connection.cancel()
+            }
+        }
+    }
+
+    /// Keep the connection alive by continuing to receive data (discarded).
+    /// The connection stays open until resolvePermission sends the response.
+    private func receiveLoop(connection: NWConnection) {
+        connection.receive(minimumIncompleteLength: 0, maximumLength: 65536) { [weak self] _, _, isComplete, error in
+            if error != nil {
                 connection.cancel()
                 return
             }
-
-            let holdsConnection = self.processRequest(data: data, connection: connection)
-
-            // For /permission requests, the connection is held open until user decides
-            if !holdsConnection && (isComplete || error != nil) {
-                connection.cancel()
+            // Continue receiving until connection is explicitly closed
+            if !isComplete {
+                self?.receiveLoop(connection: connection)
             }
         }
     }
@@ -188,21 +206,16 @@ final class StateMonitor {
     }
 
     private func handlePermissionPost(body: String, connection: NWConnection) {
-        // Parse the permission request body
         let data = body.data(using: .utf8) ?? Data()
         let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         let toolName = json?["tool_name"] as? String
         let sessionId = json?["session_id"] as? String
         let agentId = json?["agent_id"] as? String
 
-        print("[StateMonitor] PermissionRequest: tool=\(toolName ?? "nil") session=\(sessionId ?? "nil")")
-
-        // Cancel any previous pending permission
         if let prev = pendingPermission {
             sendNoDecisionResponse(connection: prev.connection)
         }
 
-        // Hold the connection open — don't respond yet
         pendingPermission = PermissionRequest(
             toolName: toolName,
             sessionId: sessionId,
@@ -210,7 +223,6 @@ final class StateMonitor {
             connection: connection
         )
 
-        // Notify delegate to show popup
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             self.delegate?.stateMonitor(self, didReceivePermission: toolName, sessionId: sessionId)

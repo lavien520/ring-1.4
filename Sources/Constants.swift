@@ -1,9 +1,14 @@
 import Cocoa
 
+enum AppearanceMode: String {
+    case ring
+    case particleSphere
+}
+
 enum Constants {
     // MARK: - Ring Dimensions
 
-    static let defaultRingSize: CGFloat = 140
+    static let defaultRingSize: CGFloat = 126
     static let minRingSize: CGFloat = 20
     static let maxRingSize: CGFloat = 400
     static let strokeWidth: CGFloat = 4.8
@@ -55,7 +60,7 @@ enum Constants {
 
     static let defaultGlowIntensity: CGFloat = 1.5
     static let glowSliderMin: Double = 0.0
-    static let glowSliderMax: Double = 2.0
+    static let glowSliderMax: Double = 3.4
 
     // MARK: - Layout
 
@@ -76,4 +81,40 @@ enum Constants {
     // MARK: - Server
 
     static let serverPort: UInt16 = 23334
+
+    // MARK: - Gravity Physics
+
+    static let gravityAcceleration: CGFloat = 1800
+    static let gravityBounceCoeff: CGFloat = 0.55
+    static let gravityFloorFriction: CGFloat = 0.98
+    static let gravityRotationFactor: CGFloat = 0.002
+    static let gravityRotationDamping: CGFloat = 0.95
+    static let gravityVelocityThreshold: CGFloat = 5
+    static let gravityPositionThreshold: CGFloat = 2
+
+    // MARK: - Memory Monitor
+
+    static let memoryWarnThreshold: Int = 80
+    static let memoryClearThreshold: Int = 75
+    static let memoryPollInterval: TimeInterval = 5
+    static let memoryManualDuration: TimeInterval = 5
+
+    // MARK: - Particle Sphere
+
+    static let particleCount: Int = 3000
+    static let particleSphereRadiusFactor: CGFloat = 0.45  // relative to ringSize
+    static let particleBaseAlphaMin: CGFloat = 0.56
+    static let particleBaseAlphaMax: CGFloat = 1.4
+    static let particleSizeMin: CGFloat = 0.28
+    static let particleSizeMax: CGFloat = 0.84
+    static let particleGlowMultiplier: CGFloat = 4.0
+    static let particleGlowStop0: CGFloat = 0.7
+    static let particleGlowStop1: CGFloat = 0.21
+    static let particleRotationSpeed: CGFloat = 0.008
+    static let particlePerspectiveFOV: CGFloat = 600
+    static let particleTrailAlpha: CGFloat = 0.25
+    // Intel blue #0071C5
+    static let particleColorR: CGFloat = 0
+    static let particleColorG: CGFloat = 113.0 / 255.0
+    static let particleColorB: CGFloat = 197.0 / 255.0
 }

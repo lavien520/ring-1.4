@@ -11,21 +11,29 @@ final class PermissionManager {
 
     private(set) var isShowing = false
     private var permissionRings: [PermissionRingButton] = []
+    private var currentAppearance: AppearanceMode = .ring
 
     var ringButtons: [PermissionRingButton] { permissionRings }
 
     // MARK: - Show Permission Rings
 
-    func show(in parentView: NSView, window: NSWindow?) {
+    func show(in parentView: NSView, window: NSWindow?, appearanceMode: AppearanceMode = .ring) {
         guard !isShowing else { return }
         isShowing = true
+        currentAppearance = appearanceMode
 
         guard let delegate = delegate else { return }
         let ringSize = delegate.ringSize
 
         let gap = Constants.permissionGap
-        let outerR = ringSize * Constants.permissionOuterRadiusFactor
-        let step = outerR * 2 + gap
+        let step: CGFloat
+        if appearanceMode == .particleSphere {
+            let sphereR = Constants.particleSphereRadiusFactor * ringSize
+            step = sphereR * 2 + gap + 20
+        } else {
+            let outerR = ringSize * Constants.permissionOuterRadiusFactor
+            step = outerR * 2 + gap
+        }
 
         // Save main ring's screen position before expanding
         let mainCenterX = parentView.bounds.midX
@@ -103,7 +111,8 @@ final class PermissionManager {
                 radius: ringSize,
                 color: color,
                 label: label,
-                behavior: behavior
+                behavior: behavior,
+                appearanceMode: appearanceMode
             )
             btn.onTap = { [weak self] behavior in
                 self?.delegate?.permissionResolve(behavior: behavior)
@@ -130,6 +139,7 @@ final class PermissionManager {
     func hitTest(_ point: NSPoint, in parentView: NSView) -> NSView? {
         guard isShowing, let delegate = delegate else { return nil }
         let ringSize = delegate.ringSize
+        let hitRadius = self.hitRadius(ringSize: ringSize)
 
         for ring in permissionRings {
             let localPoint = ring.convert(point, from: parentView)
@@ -137,10 +147,7 @@ final class PermissionManager {
             let dx = localPoint.x - center.x
             let dy = localPoint.y - center.y
             let distance = sqrt(dx * dx + dy * dy)
-            let outerRadius = ringSize * Constants.outerRadiusFactor
-                + Constants.permissionHitRadiusOffset
-                + Constants.permissionHitRadiusExtra
-            if distance <= outerRadius {
+            if distance <= hitRadius {
                 return ring
             }
         }
@@ -151,6 +158,7 @@ final class PermissionManager {
     func hitTestBehavior(_ point: NSPoint, in parentView: NSView) -> String? {
         guard isShowing, let delegate = delegate else { return nil }
         let ringSize = delegate.ringSize
+        let hitRadius = self.hitRadius(ringSize: ringSize)
 
         for ring in permissionRings {
             let localPoint = ring.convert(point, from: parentView)
@@ -158,14 +166,21 @@ final class PermissionManager {
             let dx = localPoint.x - center.x
             let dy = localPoint.y - center.y
             let distance = sqrt(dx * dx + dy * dy)
-            let outerRadius = ringSize * Constants.outerRadiusFactor
-                + Constants.permissionHitRadiusOffset
-                + Constants.permissionHitRadiusExtra
-            if distance <= outerRadius {
+            if distance <= hitRadius {
                 return ring.behavior
             }
         }
         return nil
+    }
+
+    private func hitRadius(ringSize: CGFloat) -> CGFloat {
+        if currentAppearance == .particleSphere {
+            return Constants.particleSphereRadiusFactor * ringSize + 10
+        } else {
+            return ringSize * Constants.outerRadiusFactor
+                + Constants.permissionHitRadiusOffset
+                + Constants.permissionHitRadiusExtra
+        }
     }
 
     // MARK: - Window Expansion

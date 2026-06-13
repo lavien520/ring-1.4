@@ -41,10 +41,18 @@ final class RingView: NSView, StateMonitorDelegate {
     private var memoryHideTimer: Timer?
     private var dsegFont: NSFont?
 
+    // Appearance mode
+    private var appearanceMode: AppearanceMode = .particleSphere
+    private let particleRenderer = ParticleSphereRenderer()
+
     override init(frame: NSRect) {
         super.init(frame: frame)
         registerCustomFonts()
         setupManagers()
+        // Start animation timer if default mode is particle sphere
+        if appearanceMode == .particleSphere {
+            startParticleAnimation()
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -101,21 +109,25 @@ final class RingView: NSView, StateMonitorDelegate {
             colorOverride = Constants.flashGreenColor
         }
 
-        let rotationAngle = animationManager.rotationAngle
-        let spinAngle = animationManager.spinAngle
-        let showGap = animationManager.isAnimating
-
-        // Apply spin effect: scale X by cos(spinAngle) to simulate vertical axis rotation
-        if animationManager.isSpinning {
-            let scaleX = cos(spinAngle)
-            context.saveGState()
-            context.translateBy(x: bounds.midX, y: bounds.midY)
-            context.scaleBy(x: scaleX, y: 1.0)
-            context.translateBy(x: -bounds.midX, y: -bounds.midY)
-            RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: rotationAngle, tiltAngle: gravityManager.tiltAngle, colorOverride: colorOverride, glowIntensity: glowIntensity, showGap: showGap)
-            context.restoreGState()
+        if appearanceMode == .particleSphere {
+            particleRenderer.draw(in: bounds, context: context, ringSize: ringSize, time: CACurrentMediaTime())
         } else {
-            RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: rotationAngle, tiltAngle: gravityManager.tiltAngle, colorOverride: colorOverride, glowIntensity: glowIntensity, showGap: showGap)
+            let rotationAngle = animationManager.rotationAngle
+            let spinAngle = animationManager.spinAngle
+            let showGap = animationManager.isAnimating
+
+            // Apply spin effect: scale X by cos(spinAngle) to simulate vertical axis rotation
+            if animationManager.isSpinning {
+                let scaleX = cos(spinAngle)
+                context.saveGState()
+                context.translateBy(x: bounds.midX, y: bounds.midY)
+                context.scaleBy(x: scaleX, y: 1.0)
+                context.translateBy(x: -bounds.midX, y: -bounds.midY)
+                RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: rotationAngle, tiltAngle: gravityManager.tiltAngle, colorOverride: colorOverride, glowIntensity: glowIntensity, showGap: showGap)
+                context.restoreGState()
+            } else {
+                RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: rotationAngle, tiltAngle: gravityManager.tiltAngle, colorOverride: colorOverride, glowIntensity: glowIntensity, showGap: showGap)
+            }
         }
 
         // Draw "Allow All" label on main ring during permission mode
@@ -295,11 +307,15 @@ final class RingView: NSView, StateMonitorDelegate {
         NSApp.activate(ignoringOtherApps: true)
 
         let menu = ContextMenuBuilder.build(
+            currentAppearance: appearanceMode,
             onSettings: { [weak self] in self?.showSettings() },
             onRotate: { [weak self] in self?.animationManager.startRotationAnimation() },
             onSpin: { [weak self] in self?.animationManager.startSpinAnimation() },
             onGlow: { [weak self] in self?.glowPanelManager.showPanel(relativeTo: self?.window) },
             onMemory: { [weak self] in self?.showMemoryTemporarily() },
+            onPulse: { [weak self] in self?.toggleParticlePulse() },
+            onExplode: { [weak self] in self?.particleRenderer.explode() },
+            onAppearance: { [weak self] mode in self?.switchAppearance(to: mode) },
             onClose: { NSApp.terminate(nil) }
         )
         let locationInWindow = event.locationInWindow
@@ -314,6 +330,48 @@ final class RingView: NSView, StateMonitorDelegate {
         }
         settingsController?.showWindow(nil)
         settingsController?.window?.center()
+    }
+
+    // MARK: - Appearance Mode
+
+    private func toggleParticlePulse() {
+        if particleRenderer.isPulsing {
+            particleRenderer.stopPulse()
+        } else {
+            particleRenderer.startPulse()
+        }
+    }
+
+    private func switchAppearance(to mode: AppearanceMode) {
+        guard mode != appearanceMode else { return }
+        appearanceMode = mode
+        needsDisplay = true
+
+        // In particle sphere mode, start a display link for smooth rotation
+        if mode == .particleSphere {
+            startParticleAnimation()
+        } else {
+            stopParticleAnimation()
+        }
+    }
+
+    private var particleTimer: Timer?
+
+    private func startParticleAnimation() {
+        stopParticleAnimation()
+        particleTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.appearanceMode == .particleSphere else { return }
+            self.needsDisplay = true
+            // Also redraw permission buttons (they have their own particle renderers)
+            for btn in self.permissionManager.ringButtons {
+                btn.needsDisplay = true
+            }
+        }
+    }
+
+    private func stopParticleAnimation() {
+        particleTimer?.invalidate()
+        particleTimer = nil
     }
 
     // MARK: - Memory Display
@@ -354,7 +412,9 @@ final class RingView: NSView, StateMonitorDelegate {
 
         switch state {
         case .thinking, .working:
-            if isOpenClaw {
+            if appearanceMode == .particleSphere {
+                particleRenderer.startPulse()
+            } else if isOpenClaw {
                 if !animationManager.isSpinning { animationManager.startSpinAnimation(continuous: true) }
             } else {
                 if !isStateDrivenRotation {
@@ -364,7 +424,12 @@ final class RingView: NSView, StateMonitorDelegate {
             }
 
         case .idle, .sleeping:
-            if isOpenClaw {
+            if appearanceMode == .particleSphere {
+                particleRenderer.stopPulse()
+                if previousState == .working || previousState == .thinking {
+                    particleRenderer.flashColor(.systemGreen)
+                }
+            } else if isOpenClaw {
                 if animationManager.isSpinning {
                     animationManager.stopSpinAnimation()
                     flashManager.flashGreen(duration: Constants.greenFlashDurationLong)
@@ -380,7 +445,9 @@ final class RingView: NSView, StateMonitorDelegate {
             }
 
         case .attention:
-            if isOpenClaw {
+            if appearanceMode == .particleSphere {
+                particleRenderer.stopPulse()
+            } else if isOpenClaw {
                 if animationManager.isSpinning {
                     animationManager.stopSpinAnimation()
                     flashManager.flashGreen(duration: Constants.greenFlashDurationLong)
@@ -393,7 +460,10 @@ final class RingView: NSView, StateMonitorDelegate {
             }
 
         case .error:
-            if isOpenClaw {
+            if appearanceMode == .particleSphere {
+                particleRenderer.stopPulse()
+                particleRenderer.flashColor(.systemRed)
+            } else if isOpenClaw {
                 if animationManager.isSpinning {
                     animationManager.stopSpinAnimation()
                     flashManager.flashRed()
@@ -411,7 +481,7 @@ final class RingView: NSView, StateMonitorDelegate {
     }
 
     func stateMonitor(_ monitor: StateMonitor, didReceivePermission toolName: String?, sessionId: String?) {
-        permissionManager.show(in: self, window: window)
+        permissionManager.show(in: self, window: window, appearanceMode: appearanceMode)
     }
 
     // MARK: - Window Resize

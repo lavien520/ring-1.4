@@ -20,5 +20,10 @@ swiftc -O \
 echo "==> Copying Info.plist..."
 cp Info.plist "${APP_BUNDLE}/Contents/"
 
+if [ -d "fonts" ] && [ "$(ls -A fonts)" ]; then
+    echo "==> Copying fonts..."
+    cp fonts/*.ttf "${APP_BUNDLE}/Contents/Resources/"
+fi
+
 echo "==> Build complete: ${APP_BUNDLE}"
 echo "    Run with: open ${APP_BUNDLE}"

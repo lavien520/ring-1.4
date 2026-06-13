@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s -X POST http://127.0.0.1:23334/state -H 'Content-Type: application/json' -d '{\"state\":\"attention\",\"agent_id\":\"claude-code\",\"event\":\"Elicitation\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:23334/state -H 'Content-Type: application/json' -d '{\"state\":\"idle\",\"agent_id\":\"test\"}')",
+      "Bash(timeout 10 \"/opt/homebrew/Cellar/node/26.0.0/bin/node\" \"/Users/liang/Desktop/vibecoding/ring-1.4/hooks/ring-hook.js\" \"PermissionRequest\")",
+      "Bash(time \"/opt/homebrew/Cellar/node/26.0.0/bin/node\" \"/Users/liang/Desktop/vibecoding/ring-1.4/hooks/ring-hook.js\" \"PermissionRequest\")",
+      "Bash(# Ring app is running. Send permission request and trace the full flow. *)",
+      "Bash(make build 2>&1 | tail -2 && pkill -f RingGlow 2>/dev/null; sleep 0.3 && open /Users/liang/Desktop/vibecoding/ring-1.4/build/RingGlow.app && sleep 1 && rm -f /var/folders/fr/6yy0gt394mlb55rqc3ydzlqh0000gn/T/ring-state.log && echo '{\"session_id\":\"log-test2\",\"tool_name\":\"Bash\",\"agent_id\":\"claude-code\"}' | \"/opt/homebrew/Cellar/node/26.0.0/bin/node\" \"/Users/liang/Desktop/vibecoding/ring-1.4/hooks/ring-hook.js\" \"PermissionRequest\" > /tmp/hook-result5.txt 2>&1 & *)",
+      "Bash(swift -e ' *)",
+      "Bash(fc-list)",
+      "Read(//System/Library/Fonts/**)",
+      "Read(//Library/Fonts/**)",
+      "Bash(curl -sL \"https://github.com/keshikan/DSEG/releases/download/v0.46/DSEG_v046.zip\" -o /tmp/dseg.zip)",
+      "Bash(curl -sL \"https://github.com/keshikan/DSEG/releases/download/v0.46/DSEG_v046.zip\" -o /tmp/dseg.zip -w \"%{http_code}\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/keshikan/DSEG/master/fonts/DSEG7-Classic/DSEG7Classic-Bold.ttf\" -o /tmp/DSEG7Classic-Bold.ttf -w \"%{http_code}\")",
+      "Bash(curl -sI \"https://github.com\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/keshikan/DSEG/master/fonts/DSEG7-Classic/DSEG7Classic-Bold.ttf\" -o /tmp/dseg.ttf)",
+      "Bash(gh release *)",
+      "Bash(unzip -o dseg.zip -d dseg_extracted)",
+      "Bash(curl -sL \"https://fonts.google.com/download?family=Orbitron\" -o /tmp/orbitron.zip)",
+      "Bash(curl -sL \"https://fonts.googleapis.com/css2?family=Orbitron:wght@700\")",
+      "Bash(curl -sL \"https://fonts.gstatic.com/s/orbitron/v35/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1ny_Cmxpg.ttf\" -o /Users/liang/Desktop/vibecoding/ring-1.4/fonts/Orbitron-Bold.ttf)",
+      "Bash(open /Users/liang/Desktop/vibecoding/ring-1.4/build/RingGlow.dmg)",
+      "Bash(ffmpeg -i ~/Downloads/lizi.mp4 -vf \"fps=10,scale=480:-1:flags=lanczos\" -loop 0 /tmp/lizi_preview.gif -y)",
+      "Bash(ffmpeg -i ~/Downloads/lizi.mp4 -vf \"fps=5,scale=240:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" -loop 0 /tmp/lizi_small.gif -y)",
+      "Bash(ffmpeg -i ~/Downloads/lizi.mp4 -vf \"fps=1,scale=320:-1\" -frames:v 5 /tmp/lizi_frame_%02d.png -y)",
+      "Bash(ffmpeg -i ~/Downloads/lizi.mp4 -vf \"fps=2,scale=320:-1\" -frames:v 10 /tmp/lizi_more_%02d.png -y)",
+      "Bash(open /tmp/particle-ring-demo.html)",
+      "Bash(bash build.sh)",
+      "Bash(open /tmp/Ring.app)",
+      "Bash(curl -s -X POST http://127.0.0.1:23334/permission -H 'Content-Type: application/json' -d '{\"tool_name\":\"Bash\",\"session_id\":\"sphere-test\",\"agent_id\":\"claude-code\"}' --max-time 30)"
+    ],
+    "additionalDirectories": [
+      "/private/var/folders/fr/6yy0gt394mlb55rqc3ydzlqh0000gn/T",
+      "/tmp"
+    ]
+  }
+}

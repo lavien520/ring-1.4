@@ -7,12 +7,16 @@ final class PermissionRingButton: NSView {
     private let ringColor: NSColor
     private let label: String
     let behavior: String
+    private let appearanceMode: AppearanceMode
+    private let particleRenderer: ParticleSphereRenderer?
 
-    init(center: CGPoint, radius: CGFloat, color: NSColor, label: String, behavior: String) {
+    init(center: CGPoint, radius: CGFloat, color: NSColor, label: String, behavior: String, appearanceMode: AppearanceMode) {
         self.ringSize = radius
         self.ringColor = color
         self.label = label
         self.behavior = behavior
+        self.appearanceMode = appearanceMode
+        self.particleRenderer = appearanceMode == .particleSphere ? ParticleSphereRenderer() : nil
 
         let padding = radius + Constants.permissionPadding
         let frame = NSRect(
@@ -33,8 +37,13 @@ final class PermissionRingButton: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
 
-        // Draw ring using same renderer as main ring
-        RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: 0, colorOverride: ringColor)
+        if appearanceMode == .particleSphere, let renderer = particleRenderer {
+            // Draw particle sphere with button's color
+            renderer.drawColored(in: bounds, context: context, ringSize: ringSize, time: CACurrentMediaTime(), color: ringColor)
+        } else {
+            // Draw ring using same renderer as main ring
+            RingRenderer.draw(in: bounds, context: context, ringSize: ringSize, rotationAngle: 0, colorOverride: ringColor)
+        }
 
         // Draw label text with sci-fi glow effect
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
@@ -75,11 +84,17 @@ final class PermissionRingButton: NSView {
         let dx = point.x - center.x
         let dy = point.y - center.y
         let distance = sqrt(dx * dx + dy * dy)
-        let outerRadius = ringSize * Constants.outerRadiusFactor
-            + Constants.permissionHitRadiusOffset
-            + Constants.permissionHitRadiusExtra
 
-        if distance <= outerRadius {
+        let hitRadius: CGFloat
+        if appearanceMode == .particleSphere {
+            hitRadius = Constants.particleSphereRadiusFactor * ringSize + 10
+        } else {
+            hitRadius = ringSize * Constants.outerRadiusFactor
+                + Constants.permissionHitRadiusOffset
+                + Constants.permissionHitRadiusExtra
+        }
+
+        if distance <= hitRadius {
             onTap?(behavior)
         }
     }

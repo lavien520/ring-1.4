@@ -12,8 +12,6 @@ const RING_SERVER_PORT = 23334;
 const RING_SERVER_HEADER = "x-ring-server";
 
 // Event to state mapping (similar to Clawd on Desk)
-// PermissionRequest is handled via HTTP hook directly (blocking),
-// not via this command hook. See ~/.claude/settings.json.
 const EVENT_TO_STATE = {
   SessionStart: "idle",
   SessionEnd: "sleeping",
@@ -100,17 +98,82 @@ function extractSessionTitle(payload) {
   return null;
 }
 
+function postPermission(payload) {
+  const body = JSON.stringify(payload);
+
+  const options = {
+    hostname: "127.0.0.1",
+    port: RING_SERVER_PORT,
+    path: "/permission",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(body),
+    },
+    timeout: 60000,
+  };
+
+  return new Promise((resolve) => {
+    const req = http.request(options, (res) => {
+      let responseBody = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => {
+        if (responseBody.length < 1024) responseBody += chunk;
+      });
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(responseBody));
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+
+    req.on("error", () => resolve(null));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(null);
+    });
+
+    req.end(body);
+  });
+}
+
 async function main() {
   const event = process.argv[2];
+
+  // Debug: log hook invocation to file
+  try {
+    fs.appendFileSync(
+      path.join(os.tmpdir(), "ring-hook.log"),
+      `[${new Date().toISOString()}] event=${event} args=${process.argv.slice(2).join(" ")}\n`
+    );
+  } catch {}
+
+  const payload = (await readStdinJson()) || {};
+  const sessionId = payload.session_id || "default";
+  const agentId = payload.agent_id || "claude-code";
+
+  // PermissionRequest: send to ring app, wait for user decision
+  if (event === "PermissionRequest") {
+    const toolName = payload.tool_name || "unknown";
+    const result = await postPermission({
+      tool_name: toolName,
+      session_id: sessionId,
+      agent_id: agentId,
+    });
+
+    if (result && result.hookSpecificOutput) {
+      process.stdout.write(JSON.stringify(result) + "\n");
+    }
+    process.exit(0);
+  }
+
   const state = EVENT_TO_STATE[event];
 
   if (!state) {
     process.exit(0);
   }
-
-  const payload = (await readStdinJson()) || {};
-  const sessionId = payload.session_id || "default";
-  const agentId = payload.agent_id || "claude-code";
 
   const body = {
     state,
